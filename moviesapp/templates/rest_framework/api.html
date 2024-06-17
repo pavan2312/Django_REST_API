@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movies</title>
+</head>
+<body>
+    
+    
+    <h2>Create a New Show</h2>
+    <form action="{% url 'post-shows' %}" method="post">
+        {% csrf_token %}
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br>
+        <label for="duration">Duration (minutes):</label>
+        <input type="number" id="duration" name="duration" required><br>
+        <label for="rating">Rating:</label>
+        <input type="number" id="rating" name="rating" min="0.5" max="5.0" step="0.5" required><br>
+        <label for="year_of_release">Year of Release:</label>
+        <input type="number" id="year_of_release" name="year_of_release" required><br>
+        <label for="studio">Studio:</label>
+        <input type="text" id="studio" name="studio" required><br>
+        <button type="submit">Create Show</button>
+    </form>
+ 
+
+ <h2>List of Shows</h2>
+    <ul id="show-list">
+       
+    </ul>
+
+    <script>
+        // Fetch data from the API endpoint
+        fetch('/get/shows/')
+            .then(response => response.json())
+            .then(data => {
+                const showList = document.getElementById('show-list');
+                if (data.shows.length > 0) {
+                    data.shows.forEach(show => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = show.name + ", "+ show.year_of_release
+                        showList.appendChild(listItem);
+                    });
+                } else {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = 'No shows available.';
+                    showList.appendChild(listItem);
+                }
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    </script>
+
+ <h2>Show Details</h1>
+    <div id="show-details"></div>
+    <script>      
+   // Get the current URL
+const currentUrl = window.location.href;
+
+// Split the URL by '/'
+const urlParts = currentUrl.split('/');
+
+// The 'pk' value should be the second-to-last part of the URL
+const pk = urlParts[urlParts.length - 2];
+
+// Fetch data for the specific show using the 'pk' value
+fetch(`/get/shows/${pk}/`)
+    .then(response => response.json())
+    .then(data => {
+        // Display the show details on the page
+        const showDetailsContainer = document.getElementById('show-details');
+        showDetailsContainer.innerHTML = `            
+            <p>Name: ${data.name}</p>
+            <p>Duration: ${data.duration} minutes</p>                     
+            <p>Year of Release: ${data.year_of_release}</p>
+            <p>Studio: ${data.studio}</p>
+        `;
+    })
+    .catch(error => console.error('Error fetching data:', error));
+
+    </script>
+
+
+   <h2>Update Show</h2>
+    <form  id="update-show-form">
+        {% csrf_token %}        
+        <label for="name">Name:</label>
+        <input type="text" id="update_name" name="name" required><br>
+        <label for="duration">Duration (minutes):</label>
+        <input type="number" id="update_duration" name="duration" required><br>        
+        <label for="year_of_release">Year of Release:</label>
+        <input type="number" id="update_year_of_release" name="year_of_release" required><br>
+        <label for="studio">Studio:</label>
+        <input type="text" id="update_studio" name="studio" required><br>
+        <button type="submit">Update Show</button>
+    </form>
+
+    <script>
+
+        // Fetch data for the specific show using the 'pk' value
+        fetch(`/get/shows/${pk}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Populate the form fields with show details                
+                document.getElementById('update_name').value = data.name;
+                document.getElementById('update_duration').value = data.duration;             document.getElementById('update_year_of_release').value = data.year_of_release;
+                document.getElementById('update_studio').value = data.studio;
+            })
+            .catch(error => console.error('Error fetching data:', error));
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Check if cookie name matches the given name
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+        // Add event listener to form submission
+        document.getElementById('update-show-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            // Serialize form data
+            const formData = new FormData(this);  
+            
+            // Get CSRF token from cookies
+            const csrftoken = getCookie('csrftoken');
+
+            // Make PUT request to update the show
+            fetch(`/put/shows/${pk}/`, {                
+            method: 'PUT',
+            headers: {
+                'X-CSRFToken': csrftoken 
+                },
+            body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle response
+                alert("Show updated successfully: " + data.name)               
+               
+            }) 
+            .catch(error => console.error('Error updating show:', error));
+        });      
+
+    </script>
+
+    <h2>Delete Show</h2>
+    <label for="showIdInput">Enter Show ID:</label>
+   <input type="number" id="showIdInput" name="showId" min="1" inputmode="numeric">
+    <button id="deleteButton">Delete Show</button>
+
+    <script>
+    document.getElementById("deleteButton").addEventListener("click", function() {            
+        var showId = document.getElementById("showIdInput").value;        
+        var csrftoken = getCookie('csrftoken');
+
+        fetch(`/delete/shows/${showId}/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,  // Include CSRF token in request headers
+            },
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Show deleted successfully:', data); 
+            alert('Show deleted successfully: ' + data.name);               
+        })
+        .catch(error => {
+            console.error('There was a problem deleting the show:', error);
+        });
+    });
+</script>
+
+<h2>Filter Show By Year</h2>
+<input type="number" id="yearInput" name="year" placeholder="Enter year">
+<button id="filterButton">Filter</button>
+<script>
+    document.getElementById("filterButton").addEventListener("click", function() {            
+        var year = document.getElementById("yearInput").value;
+        
+        fetch(`/shows/?year=${year}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert("year of release:",data.year_of_release)
+            console.log('Filtered shows:'+ data); 
+            // Handle the filtered shows data as needed
+        })
+        .catch(error => {
+            console.error('There was a problem filtering shows:', error);
+        });
+    });
+</script>
+
+
+</body>
+</html>

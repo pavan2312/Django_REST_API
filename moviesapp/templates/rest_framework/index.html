@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Movies</title>
+</head>
+<body>
+    <h1>Shows Gallery<h1>
+    <button onclick="listAllShows()">List All Shows</button><br><br>
+    <button onclick="showDetails()">Details of Show</button><br><br>
+    <button onclick="createShow()">Create a Show</button><br><br>
+    <button onclick="updateShow()">Update a Show</button><br><br>
+    <button onclick="deleteShow()">Delete a Show</button><br><br>
+
+    <script>
+        function listAllShows() {
+            window.location.href = "/get/shows/";
+        }
+
+        function showDetails() {
+            window.location.href = "/get/shows/1/"; // Replace '1' with the specific show ID
+        }
+
+        function createShow() {
+            window.location.href = "/post/shows/";
+        }
+
+        function updateShow() {
+            window.location.href = "/put/shows/1/"; // Replace '1' with the specific show ID
+        }
+
+        function deleteShow() {
+            window.location.href = "/delete/shows/1/"; // Replace '1' with the specific show ID
+        }
+    </script>
+</body>
+</html>
